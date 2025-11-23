@@ -5,6 +5,7 @@ Simple left join on track_id to combine chart data with audio features.
 
 import pandas as pd
 from datasets import load_dataset
+from tqdm import tqdm
 import time
 
 
@@ -13,8 +14,10 @@ def load_huggingface_audio_features():
     print("Downloading Spotify audio features from Hugging Face...")
     print("(This may take a minute on first run...)\n")
 
-    dataset = load_dataset("maharshipandya/spotify-tracks-dataset")
-    audio_df = pd.DataFrame(dataset['train'])
+    with tqdm(total=1, desc="Loading HuggingFace dataset", unit="dataset") as pbar:
+        dataset = load_dataset("maharshipandya/spotify-tracks-dataset")
+        audio_df = pd.DataFrame(dataset['train'])
+        pbar.update(1)
 
     print(f"✓ Loaded {len(audio_df):,} tracks with audio features")
     print(f"  Columns: {list(audio_df.columns)}\n")
@@ -26,7 +29,9 @@ def load_charts_data(limit=None):
     """Load the Kaggle charts dataset."""
     print("Loading Kaggle charts data...")
 
-    charts_df = pd.read_csv('data/charts.csv')
+    with tqdm(total=1, desc="Loading charts CSV", unit="file") as pbar:
+        charts_df = pd.read_csv('data/charts.csv')
+        pbar.update(1)
 
     if limit:
         # Get first N unique track IDs for testing
@@ -44,13 +49,15 @@ def merge_on_track_id(charts_df, audio_df):
     print("Merging datasets on track_id...")
 
     # Left join: keep all chart entries, add audio features where available
-    merged_df = pd.merge(
-        charts_df,
-        audio_df,
-        on='track_id',
-        how='left',
-        suffixes=('_chart', '_audio')
-    )
+    with tqdm(total=1, desc="Merging on track_id", unit="merge") as pbar:
+        merged_df = pd.merge(
+            charts_df,
+            audio_df,
+            on='track_id',
+            how='left',
+            suffixes=('_chart', '_audio')
+        )
+        pbar.update(1)
 
     # Calculate match statistics
     total_entries = len(merged_df)
@@ -75,7 +82,9 @@ def save_results(merged_df, test_mode=True):
     """Save the merged dataset and display summary."""
     output_file = 'data/charts_with_audio_test.csv' if test_mode else 'data/charts_with_audio_full.csv'
 
-    merged_df.to_csv(output_file, index=False)
+    with tqdm(total=1, desc="Saving results", unit="file") as pbar:
+        merged_df.to_csv(output_file, index=False)
+        pbar.update(1)
 
     print(f"{'='*70}")
     print(f"Results saved to: {output_file}")

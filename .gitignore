@@ -1,2 +1,4 @@
 data/charts.csv
+data/charts_with_audio_full.csv
+data/charts_with_audio_filtered.csv
 .env
